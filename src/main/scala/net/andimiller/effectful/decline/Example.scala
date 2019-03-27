@@ -4,18 +4,21 @@ import cats._, cats.implicits._
 import cats.effect._
 import com.monovore.decline._
 
-object Example extends IOCommandApp {
-  override val name: String = "example"
-  override val header: String = "an example program"
+case class Config(a: Boolean, o: Option[String], arg: String)
+
+object Example extends IOCommandApp[Config] {
+  val name: String = "example"
+  val header: String = "an example program"
   override val version: String = "0.1.0"
-  override val main: Opts[IO[ExitCode]] = (
+
+  override def commandLine = (
     Opts.flag("a", "an a flag").orFalse,
     Opts.option[String]("o", "an o option").orNone,
     Opts.argument[String]("an argument")
-  ).mapN { case (a, o, arg) =>
-      IO {
-        println((a, o, arg))
-        ExitCode.Success
-      }
+  ).mapN(Config.apply)
+
+  override def main(c: Config): IO[ExitCode] = IO {
+    println((c.a, c.o, c.arg))
+    ExitCode.Success
   }
 }
